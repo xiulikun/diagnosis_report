@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<title>首次课学情诊断报告</title>
+<style>
+        @page {
+            size: A4;
+            margin: 15mm;
+        }
+
+        @font-face {
+            font-family: 'MyCustomFont';
+            src: url('./report_font.TTF') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        body {
+            margin: 0 auto;
+            width: 210mm;
+            min-height: 290mm;
+            font-family: 'MyCustomFont', sans-serif;
+            color: #333;
+            background: white;
+            padding: 5mm 15mm;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background: white;
+        }
+
+        .container p {
+            font-size: 10pt;
+            color: #ccc;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 20pt;
+            margin: 0 0 3mm;
+            padding: 3mm 0;
+            border-bottom: 1.2pt solid #005a54;
+            position: relative;
+        }
+
+        h2 {
+            font-size: 16pt;
+            margin: 4mm 0;
+
+            text-align: center;
+        }
+
+        .base-block,
+        .exam-block,
+        .guess-block,
+        .study-block {
+            padding: 4mm;
+            margin-bottom: 4mm;
+            background: #f8fff8;
+            border: 1px solid #e0e0e0;
+            border-radius: 10pt;
+        }
+
+        .input-group {
+            margin-bottom: 2mm;
+            display: flex;
+            align-items: center;
+        }
+
+        .base-block {
+            display: grid;
+            grid-template-columns: 200pt 360pt;
+            grid-template-rows: 28pt 28pt 28pt;
+            grid-auto-flow: column;
+        }
+
+        .base-block .input-group {
+            margin-left: 22pt;
+        }
+
+
+        .base-block label {
+
+            font-size: 10.5pt;
+            vertical-align: middle;
+            padding: 1mm 0;
+        }
+
+        .base-block input {
+            margin-left: 5pt;
+            width: 54%;
+            padding: 1mm;
+            border: 1px solid #ccc;
+            font-size: 10.5pt;
+            background: white;
+            vertical-align: middle;
+            border-radius: 5pt;
+        }
+
+        .exam-block {
+            display: grid;
+            grid-template-columns: repeat(3, 33%);
+            grid-auto-flow: row dense;
+        }
+        .exam-block .input-group {
+            margin-left: 10pt;
+        }
+
+        .exam-block input,
+        .exam-block select {
+            margin-left: 5pt;
+            width: 60%;
+            padding: 1mm;
+            border: 1px solid #ccc;
+            font-size: 10.5pt;
+            background: white;
+            vertical-align: middle;
+            border-radius: 5pt;
+        }
+
+        .exam-block .item1 {
+            grid-column-start: 1;
+            grid-column-end: 2;
+        }
+
+        .exam-block .item2 {
+            grid-column-start: 1;
+            grid-column-end: 2;
+        }
+
+        .exam-block .item3 {
+            grid-column-start: 2;
+            grid-column-end: 3;
+            grid-row-start: 2;
+            grid-row-end: 4;
+            justify-self: start;
+            display: grid;
+            grid-template-rows: 10pt;
+            grid-template-columns: repeat(5, 40%);
+        }
+
+        .exam-block .item4 {
+            grid-column-start: 1;
+            grid-column-end: 6;
+            grid-row-start: 1;
+            grid-row-end: 2;
+
+        }
+
+        .guess-block {
+            display: flex;
+        }
+
+        .guess-block .left {
+            display: grid;
+            width: 50%;
+            margin-left: 40pt;
+            margin-top: 20pt;
+
+        }
+
+         .study-block {
+           display: grid;
+           grid-template-columns: repeat(2,50%);
+         }
+         .study-block input {
+            margin-left: 10pt;
+            border-radius: 5pt;
+            width: 50%;
+         }
+    
+        .study-block .item3 {
+            grid-column-start: 1;
+            grid-column-end: 3;
+            grid-row-start: 2;
+            grid-row-end: 2;
+        }         
+ 
+        .study-block .item3 textarea{
+            width: 70%;
+            margin-left: 10pt;
+            border-radius: 5pt;
+        }
+
+        input, select, textarea {
+            padding: 1mm;
+            border: 1px solid #ccc;
+            font-size: 10.5pt;
+            background: white;
+            vertical-align: middle;
+        }
+
+
+        .ability-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 4mm;
+        }
+
+        .ability-ratings {
+            width: 45%;
+        }
+
+        .ability-chart {
+            width: 55%;
+            height: auto;
+            aspect-ratio: 1;
+        }
+
+        .star-rating {
+            display: inline-block;
+            margin-left: 10mm;
+        }
+
+        .star {
+            color: #ddd;
+            font-size: 12pt;
+            cursor: pointer;
+        }
+
+        .star.active {
+            color: #005a54;
+        }
+
+        canvas {
+            max-width: 100%;
+            height: auto;
+        }
+
+        @media print {
+            body {
+                padding: 0;
+                margin: 15mm;
+            }
+
+            .base-block,
+            .exam-block,
+            .guess-block,
+            .study-block {
+                break-inside: avoid;
+                background: white;
+            }
+
+            input,
+            select,
+            textarea {
+                border-color: #999;
+            }
+        }
+    </style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<button onclick="exportToPDF()" style="position: fixed; top: 20px; right: 20px; z-index: 9999; padding: 8px 16px; font-size: 12pt;">一键导出</button>
+
+<div class="container">
+<h1>首次课学情诊断报告</h1>
+<!-- 基本信息 -->
+<h2>基本信息</h2>
+<div class="base-block">
+<div class="input-group">
+<label>学生姓名</label>
+<input required="" type="text"/>
+</div>
+<div class="input-group">
+<label>授课教师</label>
+<input required="" type="text"/>
+</div>
+<div class="input-group">
+<label>授课日期</label>
+<input required="" type="date"/>
+</div>
+<div class="input-group">
+<label>授课内容</label>
+<input placeholder="简明概括课程内容" type="text"/>
+</div>
+<div class="input-group">
+<label>重点难点</label>
+<input type="text"/>
+</div>
+<div class="input-group">
+<label>课后练习</label>
+<input type="text"/>
+</div>
+</div>
+<!-- 考试信息 -->
+<h2>考试信息</h2>
+<div class="exam-block">
+<div class="input-group">
+<label>体系</label>
+<select required=""><option value="">请选择</option></select>
+</div>
+<div class="input-group">
+<label>考试时长</label>
+<input placeholder="分钟" type="text"/>
+</div>
+<div class="input-group">
+<label>考试总分</label>
+<input type="number"/>
+</div>
+<div class="input-group item1">
+<label>学科</label>
+<select required=""><option value="">请选择</option></select>
+</div>
+<div class="input-group item2">
+<label>试卷</label>
+<select required=""><option value="">请选择</option></select>
+</div>
+<div class="input-group item3">
+<label class="item4">最新分数线标准</label>
+<input class="mini-input" placeholder="A*" type="text"/>
+<input class="mini-input" placeholder="A" type="text"/>
+<input class="mini-input" placeholder="B" type="text"/>
+<input class="mini-input" placeholder="C" type="text"/>
+<input class="mini-input" placeholder="D" type="text">
+</input></div>
+</div>
+<!-- 能力评估 -->
+<h2>能力评估</h2>
+<div class="guess-block">
+<div class="left">
+<div class="ability-item">
+<label>
+                        学科基础
+                    </label>
+<div class="star-rating" data-target="subject-base">
+<span class="star" data-value="1">
+                            ★
+                        </span>
+<span class="star" data-value="2">
+                            ★
+                        </span>
+<span class="star" data-value="3">
+                            ★
+                        </span>
+<span class="star" data-value="4">
+                            ★
+                        </span>
+<span class="star" data-value="5">
+                            ★
+                        </span>
+</div>
+</div>
+<div class="ability-item">
+<label>
+                        英文水平
+                    </label>
+<div class="star-rating" data-target="english">
+<span class="star" data-value="1">
+                            ★
+                        </span>
+<span class="star" data-value="2">
+                            ★
+                        </span>
+<span class="star" data-value="3">
+                            ★
+                        </span>
+<span class="star" data-value="4">
+                            ★
+                        </span>
+<span class="star" data-value="5">
+                            ★
+                        </span>
+</div>
+</div>
+<div class="ability-item">
+<label>
+                        计算准确
+                    </label>
+<div class="star-rating" data-target="calculation">
+<span class="star" data-value="1">
+                            ★
+                        </span>
+<span class="star" data-value="2">
+                            ★
+                        </span>
+<span class="star" data-value="3">
+                            ★
+                        </span>
+<span class="star" data-value="4">
+                            ★
+                        </span>
+<span class="star" data-value="5">
+                            ★
+                        </span>
+</div>
+</div>
+<div class="ability-item">
+<label>
+                        灵活运用
+                    </label>
+<div class="star-rating" data-target="flexibility">
+<span class="star" data-value="1">
+                            ★
+                        </span>
+<span class="star" data-value="2">
+                            ★
+                        </span>
+<span class="star" data-value="3">
+                            ★
+                        </span>
+<span class="star" data-value="4">
+                            ★
+                        </span>
+<span class="star" data-value="5">
+                            ★
+                        </span>
+</div>
+</div>
+<div class="ability-item">
+<label>
+                        逻辑思维
+                    </label>
+<div class="star-rating" data-target="logic">
+<span class="star" data-value="1">
+                            ★
+                        </span>
+<span class="star" data-value="2">
+                            ★
+                        </span>
+<span class="star" data-value="3">
+                            ★
+                        </span>
+<span class="star" data-value="4">
+                            ★
+                        </span>
+<span class="star" data-value="5">
+                            ★
+                        </span>
+</div>
+</div>
+<div class="ability-item">
+<label>
+                        书面表述
+                    </label>
+<div class="star-rating" data-target="writing">
+<span class="star" data-value="1">
+                            ★
+                        </span>
+<span class="star" data-value="2">
+                            ★
+                        </span>
+<span class="star" data-value="3">
+                            ★
+                        </span>
+<span class="star" data-value="4">
+                            ★
+                        </span>
+<span class="star" data-value="5">
+                            ★
+                        </span>
+</div>
+</div>
+</div>
+<div class="right">
+<canvas height="300" id="abilityChart" style="margin-top: 10px;" width="300">
+</canvas>
+</div>
+</div>
+<p>能力评估板块仅为授课教师针对首次课课堂表现给出的评价，可能存在主观性，仅作为后续课程和学习规划参考使用</p>
+</div>
+<!-- 学习建议 -->
+<h2>学习建议</h2>
+<div class="study-block">
+<div class="input-group item1">
+<label>课堂小测准确率</label>
+<input max="100" min="0" placeholder="输入百分比" type="number">
+</input></div>
+<div class="input-group item2">
+<label>薄弱知识点</label>
+<input type="text">
+</input></div>
+<div class="input-group item3">
+<label>学习及备考建议</label>
+<textarea rows="3"></textarea>
+</div>
+</div>
+<script>
+        // 星级评分功能
+        document.querySelectorAll('.star-rating').forEach(container => {
+            const stars = container.querySelectorAll('.star');
+
+            stars.forEach((star, index) => {
+                star.addEventListener('click', () => {
+                    stars.forEach(s => s.classList.remove('active'));
+                    for (let i = 0; i <= index; i++) {
+                        stars[i].classList.add('active');
+                    }
+                    updateHiddenInput(container, index + 1);
+                });
+            });
+
+            function updateHiddenInput(container, value) {
+                let input = container.querySelector('input[type="hidden"]');
+                if (!input) {
+                    input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = container.dataset.target;
+                    container.appendChild(input);
+                }
+                input.value = value;
+            }
+        });
+    </script>
+<script>
+        let radarChartInstance = null;
+
+        function getStarRatings() {
+            const areas = ["subject-base", "english", "calculation", "flexibility", "logic", "writing"];
+            return areas.map(id => {
+                const stars = document.querySelectorAll('[data-target="' + id + '"] .star.active');
+                return stars.length;
+            });
+        }
+
+        function drawRadarChart() {
+            const ctx = document.getElementById('abilityChart');
+            if (!ctx) return;
+
+            const ratings = getStarRatings();
+
+            if (radarChartInstance) {
+                radarChartInstance.data.datasets[0].data = ratings;
+                radarChartInstance.update();
+            } else {
+                radarChartInstance = new Chart(ctx, {
+                    type: 'radar',
+                    data: {
+                        labels: ['学科基础', '英文水平', '计算准确', '灵活运用', '逻辑思维', '书面表述'],
+                        datasets: [{
+                            label: '能力维度',
+                            data: ratings,
+                            fill: true,
+                            backgroundColor: 'rgba(0, 90, 84, 0.2)',
+                            borderColor: '#005a54',
+                            pointBackgroundColor: '#005a54',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: '#005a54'
+                        }]
+                    },
+                    options: {
+                        responsive: false,
+                        scales: {
+                            r: {
+                                suggestedMin: 0,
+                                suggestedMax: 5,
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", drawRadarChart);
+        document.querySelectorAll('.star-rating .star').forEach(star => {
+            star.addEventListener('click', () => {
+                drawRadarChart();
+            });
+        });
+    </script>
+<script>
+const systemToSubjects = {"A-Level(AQA)": ["数学", "化学", "物理", "经济", "商务", "心理"], "A-Level(CIE)": ["数学", "化学", "计算机", "物理", "经济", "心理"], "A-Level(EDX)": ["数学", "化学", "物理", "经济", "会计", "商务", "心理"], "AP": ["微积分AB", "微积分BC", "预备微积分", "统计学", "计算机科学A", "计算机原理", "物理1", "物理2", "物理C力学", "物理C电磁", "宏观经济学", "微观经济学", "心理学"], "IGCSE(AQA)": ["化学", "物理", "经济", "商务"], "IGCSE(CIE)": ["化学", "计算机", "物理", "数学", "经济"], "IGCSE(EDX)": ["数学", "化学", "计算机", "物理", "经济", "会计", "商务"]};
+const systemSubjectToPapers = {"A-Level(AQA)__化学": ["U1", "U2", "U3", "U4", "U5"], "A-Level(AQA)__商务": ["Unit1", "Unit2", "Unit3", "Unit4"], "A-Level(AQA)__心理": ["Unit1", "Unit2", "Unit3", "Unit4"], "A-Level(AQA)__数学": ["PSM1", "P1", "P2", "S2", "M2", "FP1", "FPSM1", "FP2", "FM2", "FS2"], "A-Level(AQA)__物理": ["U1", "U2", "U3", "U4", "U5"], "A-Level(AQA)__经济": ["Unit1", "Unit2", "Unit3", "Unit4"], "A-Level(CIE)__化学": ["P1", "P2", "P3", "P4", "P5"], "A-Level(CIE)__心理": ["Paper1", "Paper2", "Paper3", "Paper4"], "A-Level(CIE)__数学": ["P1", "P2", "P3", "S1", "S2", "M1", "FP1", "FP2", "FM", "FS"], "A-Level(CIE)__物理": ["P1", "P2", "P3", "P4", "P5"], "A-Level(CIE)__经济": ["AS", "A2"], "A-Level(CIE)__计算机": ["P1", "P2", "P3", "P4"], "A-Level(EDX)__会计": ["Unit1", "Unit2"], "A-Level(EDX)__化学": ["U1", "U2", "U3", "U4", "U5", "U6"], "A-Level(EDX)__商务": ["Unit1", "Unit2", "Unit3", "Unit4"], "A-Level(EDX)__心理": ["Paper1", "Paper2", "Paper3", "Paper4", "Paper5"], "A-Level(EDX)__数学": ["P1", "P2", "P3", "P4", "S1", "S2", "S3", "M1", "M2", "M3", "FP1", "FP2", "FP3", "D1"], "A-Level(EDX)__物理": ["U1", "U2", "U3", "U4", "U5", "U6"], "A-Level(EDX)__经济": ["Unit1", "Unit2", "Unit3", "Unit4"], "AP__宏观经济学": ["宏观经济学"], "AP__微积分AB": ["微积分AB"], "AP__微积分BC": ["微积分BC"], "AP__微观经济学": ["微观经济学"], "AP__心理学": ["心理学"], "AP__物理1": ["物理1"], "AP__物理2": ["物理2"], "AP__物理C力学": ["物理C力学"], "AP__物理C电磁": ["物理C电磁"], "AP__统计学": ["统计学"], "AP__计算机原理": ["计算机原理"], "AP__计算机科学A": ["计算机科学A"], "AP__预备微积分": ["预备微积分"], "IGCSE(AQA)__化学": ["0"], "IGCSE(AQA)__商务": ["0"], "IGCSE(AQA)__物理": ["PAPER 1", "PAPER 2"], "IGCSE(AQA)__经济": ["0"], "IGCSE(CIE)__化学": ["P1", "P2", "P3"], "IGCSE(CIE)__数学": ["CoreP1", "CoreP2", "AdditionalP1", "AdditionalP2"], "IGCSE(CIE)__物理": ["coreP1", "coreP3", "coreP5", "extendedP2", "extendedP4", "extendedP6"], "IGCSE(CIE)__经济": ["0"], "IGCSE(CIE)__计算机": ["P1", "P2"], "IGCSE(EDX)__会计": ["0"], "IGCSE(EDX)__化学": ["P1", "P2"], "IGCSE(EDX)__商务": ["0"], "IGCSE(EDX)__数学": ["0"], "IGCSE(EDX)__物理": ["1P", "2P"], "IGCSE(EDX)__经济": ["0"], "IGCSE(EDX)__计算机": ["0"]};
+const paperInfoMap = {"A-Level(EDX)__数学__P1": {"duration": "90分钟", "full_score": 75.0, "grades": ["-", 55, 48, 41, 34]}, "A-Level(EDX)__数学__P2": {"duration": "90分钟", "full_score": 75.0, "grades": ["-", 54, 47, 40, 34]}, "A-Level(EDX)__数学__P3": {"duration": "90分钟", "full_score": 75.0, "grades": [65, 59, 53, 47, 41]}, "A-Level(EDX)__数学__P4": {"duration": "90分钟", "full_score": 75.0, "grades": [68, 61, 53, 45, 37]}, "A-Level(EDX)__数学__S1": {"duration": "90分钟", "full_score": 75.0, "grades": ["-", 59, 51, 43, 35]}, "A-Level(EDX)__数学__S2": {"duration": "90分钟", "full_score": 75.0, "grades": [67, 59, 51, 43, 35]}, "A-Level(EDX)__数学__S3": {"duration": "90分钟", "full_score": 75.0, "grades": [70, 66, 57, 48, 39]}, "A-Level(EDX)__数学__M1": {"duration": "90分钟", "full_score": 75.0, "grades": ["-", 64, 56, 48, 40]}, "A-Level(EDX)__数学__M2": {"duration": "90分钟", "full_score": 75.0, "grades": [67, 60, 53, 46, 39]}, "A-Level(EDX)__数学__M3": {"duration": "90分钟", "full_score": 75.0, "grades": [68, 62, 53, 45, 37]}, "A-Level(EDX)__数学__FP1": {"duration": "90分钟", "full_score": 75.0, "grades": ["-", 64, 58, 52, 46]}, "A-Level(EDX)__数学__FP2": {"duration": "90分钟", "full_score": 75.0, "grades": [70, 66, 58, 50, 43]}, "A-Level(EDX)__数学__FP3": {"duration": "90分钟", "full_score": 75.0, "grades": [68, 62, 55, 48, 42]}, "A-Level(EDX)__数学__D1": {"duration": "90分钟", "full_score": 75.0, "grades": ["-", 58, 51, 45, 39]}, "A-Level(CIE)__数学__P1": {"duration": "0", "full_score": 0.0, "grades": ["-", 55, 47, 37, 27]}, "A-Level(CIE)__数学__P2": {"duration": "0", "full_score": 0.0, "grades": ["-", 40, 35, 27, 20]}, "A-Level(CIE)__数学__P3": {"duration": "0", "full_score": 0.0, "grades": ["-", 55, 45, 37, 29]}, "A-Level(CIE)__数学__S1": {"duration": "0", "full_score": 0.0, "grades": ["-", 40, 36, 28, 22]}, "A-Level(CIE)__数学__S2": {"duration": "0", "full_score": 0.0, "grades": ["-", 43, 38, 31, 24]}, "A-Level(CIE)__数学__M1": {"duration": "0", "full_score": 0.0, "grades": ["-", 41, 34, 26, 19]}, "A-Level(CIE)__数学__FP1": {"duration": "0", "full_score": 0.0, "grades": ["-", 49, 40, 33, 27]}, "A-Level(CIE)__数学__FP2": {"duration": "0", "full_score": 0.0, "grades": ["-", 69, 63, 55, 46]}, "A-Level(CIE)__数学__FM": {"duration": "0", "full_score": 0.0, "grades": ["-", 25, 17, 14, 10]}, "A-Level(CIE)__数学__FS": {"duration": "0", "full_score": 0.0, "grades": ["-", 41, 36, 30, 25]}, "A-Level(AQA)__数学__PSM1": {"duration": "0", "full_score": 0.0, "grades": ["-", 62, 54, 46, 38]}, "A-Level(AQA)__数学__P1": {"duration": "0", "full_score": 0.0, "grades": ["-", 60, 51, 43, 35]}, "A-Level(AQA)__数学__P2": {"duration": "0", "full_score": 0.0, "grades": [106, 94, 82, 70, 58]}, "A-Level(AQA)__数学__S2": {"duration": "0", "full_score": 0.0, "grades": [72, 64, 56, 48, 40]}, "A-Level(AQA)__数学__M2": {"duration": "0", "full_score": 0.0, "grades": [70, 62, 54, 46, 38]}, "A-Level(AQA)__数学__FP1": {"duration": "0", "full_score": 0.0, "grades": ["-", 63, 54, 45, 37]}, "A-Level(AQA)__数学__FPSM1": {"duration": "0", "full_score": 0.0, "grades": ["-", 63, 55, 47, 39]}, "A-Level(AQA)__数学__FP2": {"duration": "0", "full_score": 0.0, "grades": [102, 92, 79, 67, 55]}, "A-Level(AQA)__数学__FM2": {"duration": "0", "full_score": 0.0, "grades": [69, 61, 53, 45, 37]}, "A-Level(AQA)__数学__FS2": {"duration": "0", "full_score": 0.0, "grades": [71, 62, 53, 44, 35]}, "A-Level(EDX)__化学__U1": {"duration": "0", "full_score": 0.0, "grades": ["-", 52, 45, 38, 32]}, "A-Level(EDX)__化学__U2": {"duration": "0", "full_score": 0.0, "grades": ["-", 53, 45, 37, 30]}, "A-Level(EDX)__化学__U3": {"duration": "0", "full_score": 0.0, "grades": ["-", 32, 27, 23, 19]}, "A-Level(EDX)__化学__U4": {"duration": "0", "full_score": 0.0, "grades": [73, 66, 59, 52, 45]}, "A-Level(EDX)__化学__U5": {"duration": "0", "full_score": 0.0, "grades": [71, 65, 59, 53, 47]}, "A-Level(EDX)__化学__U6": {"duration": "0", "full_score": 0.0, "grades": [35, 30, 25, 20, 16]}, "A-Level(AQA)__化学__U1": {"duration": "0", "full_score": 0.0, "grades": ["-", 54, 48, 42, 36]}, "A-Level(AQA)__化学__U2": {"duration": "0", "full_score": 0.0, "grades": ["-", 53, 46, 39, 32]}, "A-Level(AQA)__化学__U3": {"duration": "0", "full_score": 0.0, "grades": [68, 60, 52, 44, 36]}, "A-Level(AQA)__化学__U4": {"duration": "0", "full_score": 0.0, "grades": [70, 62, 54, 47, 40]}, "A-Level(AQA)__化学__U5": {"duration": "0", "full_score": 0.0, "grades": [52, 46, 40, 34, 29]}, "A-Level(CIE)__化学__P1": {"duration": "0", "full_score": 0.0, "grades": ["-", 27, 22, 19, 16]}, "A-Level(CIE)__化学__P2": {"duration": "0", "full_score": 0.0, "grades": ["-", 41, 32, 28, 23]}, "A-Level(CIE)__化学__P3": {"duration": "0", "full_score": 0.0, "grades": [0, 0, 0, 0, 0]}, "A-Level(CIE)__化学__P4": {"duration": "0", "full_score": 0.0, "grades": ["-", 67, 58, 47, 35]}, "A-Level(CIE)__化学__P5": {"duration": "0", "full_score": 0.0, "grades": ["-", 24, 21, 17, 14]}, "A-Level(CIE)__计算机__P1": {"duration": "0", "full_score": 0.0, "grades": ["-", 46, 38, 32, 25]}, "A-Level(CIE)__计算机__P2": {"duration": "0", "full_score": 0.0, "grades": ["-", 47, 39, 31, 24]}, "A-Level(CIE)__计算机__P3": {"duration": "0", "full_score": 0.0, "grades": ["-", 49, 40, 35, 29]}, "A-Level(CIE)__计算机__P4": {"duration": "0", "full_score": 0.0, "grades": ["-", 52, 41, 32, 24]}, "A-Level(EDX)__物理__U1": {"duration": "0", "full_score": 0.0, "grades": ["-", 61, 54, 47, 40]}, "A-Level(EDX)__物理__U2": {"duration": "0", "full_score": 0.0, "grades": ["-", 59, 51, 43, 36]}, "A-Level(EDX)__物理__U3": {"duration": "0", "full_score": 0.0, "grades": ["-", 37, 32, 27, 23]}, "A-Level(EDX)__物理__U4": {"duration": "0", "full_score": 0.0, "grades": [78, 71, 64, 57, 50]}, "A-Level(EDX)__物理__U5": {"duration": "0", "full_score": 0.0, "grades": [79, 71, 63, 55, 47]}, "A-Level(EDX)__物理__U6": {"duration": "0", "full_score": 0.0, "grades": [42, 37, 32, 27, 23]}, "A-Level(CIE)__物理__P1": {"duration": "0", "full_score": 0.0, "grades": ["-", 30, 25, 22, 19]}, "A-Level(CIE)__物理__P2": {"duration": "0", "full_score": 0.0, "grades": ["-", 44, 37, 30, 25]}, "A-Level(CIE)__物理__P3": {"duration": "0", "full_score": 0.0, "grades": [0, 0, 0, 0, 0]}, "A-Level(CIE)__物理__P4": {"duration": "0", "full_score": 0.0, "grades": ["-", 70, 63, 51, 39]}, "A-Level(CIE)__物理__P5": {"duration": "0", "full_score": 0.0, "grades": ["-", 24, 21, 17, 13]}, "A-Level(AQA)__物理__U1": {"duration": "0", "full_score": 0.0, "grades": ["-", 52, 46, 41, 36]}, "A-Level(AQA)__物理__U2": {"duration": "0", "full_score": 0.0, "grades": ["-", 55, 48, 42, 36]}, "A-Level(AQA)__物理__U3": {"duration": "0", "full_score": 0.0, "grades": [67, 60, 53, 47, 41]}, "A-Level(AQA)__物理__U4": {"duration": "0", "full_score": 0.0, "grades": [64, 58, 52, 46, 40]}, "A-Level(AQA)__物理__U5": {"duration": "0", "full_score": 0.0, "grades": [59, 53, 47, 41, 35]}, "A-Level(EDX)__经济__Unit1": {"duration": "0", "full_score": 0.0, "grades": ["-", 52, 46, 41, 36]}, "A-Level(EDX)__经济__Unit2": {"duration": "0", "full_score": 0.0, "grades": ["-", 51, 46, 41, 36]}, "A-Level(EDX)__经济__Unit3": {"duration": "0", "full_score": 0.0, "grades": [60, 55, 50, 45, 40]}, "A-Level(EDX)__经济__Unit4": {"duration": "0", "full_score": 0.0, "grades": [58, 53, 48, 43, 38]}, "A-Level(CIE)__经济__AS": {"duration": "0", "full_score": 0.0, "grades": [0, 0, 0, 0, 0]}, "A-Level(CIE)__经济__A2": {"duration": "0", "full_score": 0.0, "grades": [0, 0, 0, 0, 0]}, "A-Level(AQA)__经济__Unit1": {"duration": "0", "full_score": 0.0, "grades": ["-", 59, 51, 43, 35]}, "A-Level(AQA)__经济__Unit2": {"duration": "0", "full_score": 0.0, "grades": ["-", 58, 51, 44, 37]}, "A-Level(AQA)__经济__Unit3": {"duration": "0", "full_score": 0.0, "grades": [72, 64, 56, 48, 40]}, "A-Level(AQA)__经济__Unit4": {"duration": "0", "full_score": 0.0, "grades": [73, 65, 57, 49, 41]}, "A-Level(EDX)__会计__Unit1": {"duration": "0", "full_score": 0.0, "grades": ["-", 134, 111, 88, 66]}, "A-Level(EDX)__会计__Unit2": {"duration": "0", "full_score": 0.0, "grades": [164, 147, 130, 113, 96]}, "A-Level(EDX)__商务__Unit1": {"duration": "0", "full_score": 0.0, "grades": ["-", 54, 49, 44, 39]}, "A-Level(EDX)__商务__Unit2": {"duration": "0", "full_score": 0.0, "grades": ["-", 50, 46, 41, 36]}, "A-Level(EDX)__商务__Unit3": {"duration": "0", "full_score": 0.0, "grades": [46, 42, 38, 34, 30]}, "A-Level(EDX)__商务__Unit4": {"duration": "0", "full_score": 0.0, "grades": [57, 50, 43, 36, 29]}, "A-Level(AQA)__商务__Unit1": {"duration": "0", "full_score": 0.0, "grades": ["-", 56, 49, 42, 35]}, "A-Level(AQA)__商务__Unit2": {"duration": "0", "full_score": 0.0, "grades": ["-", 53, 46, 39, 32]}, "A-Level(AQA)__商务__Unit3": {"duration": "0", "full_score": 0.0, "grades": [62, 55, 48, 41, 34]}, "A-Level(AQA)__商务__Unit4": {"duration": "0", "full_score": 0.0, "grades": [69, 61, 53, 45, 38]}, "A-Level(EDX)__心理__Paper1": {"duration": "0", "full_score": 0.0, "grades": ["-", 32, 28, 24, 20]}, "A-Level(EDX)__心理__Paper2": {"duration": "0", "full_score": 0.0, "grades": ["-", 43, 35, 28, 21]}, "A-Level(EDX)__心理__Paper3": {"duration": "0", "full_score": 0.0, "grades": [35, 31, 27, 23, 19]}, "A-Level(EDX)__心理__Paper4": {"duration": "0", "full_score": 0.0, "grades": [46, 39, 32, 26, 20]}, "A-Level(EDX)__心理__Paper5": {"duration": "0", "full_score": 0.0, "grades": [0, 0, 0, 0, 0]}, "A-Level(CIE)__心理__Paper1": {"duration": "0", "full_score": 0.0, "grades": ["-", 38, 33, 28, 23]}, "A-Level(CIE)__心理__Paper2": {"duration": "0", "full_score": 0.0, "grades": ["-", 38, 35, 30, 25]}, "A-Level(CIE)__心理__Paper3": {"duration": "0", "full_score": 0.0, "grades": ["-", 32, 28, 24, 20]}, "A-Level(CIE)__心理__Paper4": {"duration": "0", "full_score": 0.0, "grades": ["-", 31, 27, 23, 19]}, "A-Level(AQA)__心理__Unit1": {"duration": "0", "full_score": 0.0, "grades": ["-", 61, 53, 45, 37]}, "A-Level(AQA)__心理__Unit2": {"duration": "0", "full_score": 0.0, "grades": ["-", 66, 57, 48, 40]}, "A-Level(AQA)__心理__Unit3": {"duration": "0", "full_score": 0.0, "grades": [76, 67, 58, 50, 42]}, "A-Level(AQA)__心理__Unit4": {"duration": "0", "full_score": 0.0, "grades": [74, 65, 56, 47, 39]}, "AP__微积分AB__微积分AB": {"duration": "180分钟", "full_score": 80.0, "grades": [70, 60, 50, 42, 30]}, "AP__微积分BC__微积分BC": {"duration": "180分钟", "full_score": 80.0, "grades": [70, 60, 50, 42, 30]}, "AP__预备微积分__预备微积分": {"duration": "180分钟", "full_score": 100.0, "grades": [68, 60, 50, 42, 30]}, "AP__统计学__统计学": {"duration": "180分钟", "full_score": 120.0, "grades": [70, 60, 50, 42, 30]}, "AP__计算机科学A__计算机科学A": {"duration": "180分钟", "full_score": 80.0, "grades": [62, 44, 31, 25, 0]}, "AP__计算机原理__计算机原理": {"duration": "0", "full_score": 0.0, "grades": [0, 0, 0, 0, 0]}, "AP__物理1__物理1": {"duration": "0", "full_score": 0.0, "grades": [0, 0, 0, 0, 0]}, "AP__物理2__物理2": {"duration": "0", "full_score": 0.0, "grades": [0, 0, 0, 0, 0]}, "AP__物理C力学__物理C力学": {"duration": "0", "full_score": 0.0, "grades": [0, 0, 0, 0, 0]}, "AP__物理C电磁__物理C电磁": {"duration": "0", "full_score": 0.0, "grades": [0, 0, 0, 0, 0]}, "AP__宏观经济学__宏观经济学": {"duration": "0", "full_score": 0.0, "grades": [0, 0, 0, 0, 0]}, "AP__微观经济学__微观经济学": {"duration": "0", "full_score": 0.0, "grades": [0, 0, 0, 0, 0]}, "AP__心理学__心理学": {"duration": "0", "full_score": 0.0, "grades": [0, 0, 0, 0, 0]}, "IGCSE(EDX)__数学__0": {"duration": "0.0", "full_score": 0.0, "grades": [0, 0, 0, 0, 0]}, "IGCSE(EDX)__化学__P1": {"duration": "0.0", "full_score": 0.0, "grades": [0, 0, 0, 0, 0]}, "IGCSE(EDX)__化学__P2": {"duration": "0.0", "full_score": 0.0, "grades": [0, 0, 0, 0, 0]}, "IGCSE(CIE)__化学__P1": {"duration": "0.0", "full_score": 0.0, "grades": ["-", "-", "-", 23, 20]}, "IGCSE(CIE)__化学__P2": {"duration": "0.0", "full_score": 0.0, "grades": ["-", 27, 23, 20, 18]}, "IGCSE(CIE)__化学__P3": {"duration": "0.0", "full_score": 0.0, "grades": ["-", "-", "-", 43, 37]}, "IGCSE(AQA)__化学__0": {"duration": "0.0", "full_score": 0.0, "grades": [0, 0, 0, 0, 0]}, "IGCSE(EDX)__计算机__0": {"duration": "0.0", "full_score": 0.0, "grades": [0, 0, 0, 0, 0]}, "IGCSE(CIE)__计算机__P1": {"duration": "0.0", "full_score": 0.0, "grades": ["-", 44, 34, 25, 21]}, "IGCSE(CIE)__计算机__P2": {"duration": "0.0", "full_score": 0.0, "grades": ["-", 44, 35, 26, 21]}, "IGCSE(EDX)__物理__1P": {"duration": "0.0", "full_score": 0.0, "grades": [0, 0, 0, 0, 0]}, "IGCSE(EDX)__物理__2P": {"duration": "0.0", "full_score": 0.0, "grades": [0, 0, 0, 0, 0]}, "IGCSE(CIE)__物理__coreP1": {"duration": "0.0", "full_score": 0.0, "grades": ["-", "-", "-", 21, 19]}, "IGCSE(CIE)__物理__coreP3": {"duration": "0.0", "full_score": 0.0, "grades": ["-", "-", "-", 50, 41]}, "IGCSE(CIE)__物理__coreP5": {"duration": "0.0", "full_score": 0.0, "grades": ["-", 29, 25, 20, 18]}, "IGCSE(CIE)__物理__extendedP2": {"duration": "0.0", "full_score": 0.0, "grades": ["-", 27, 23, 20, 18]}, "IGCSE(CIE)__物理__extendedP4": {"duration": "0.0", "full_score": 0.0, "grades": ["-", 42, 32, 23, 19]}, "IGCSE(CIE)__物理__extendedP6": {"duration": "0.0", "full_score": 0.0, "grades": ["-", 31, 27, 22, 19]}, "IGCSE(AQA)__物理__PAPER 1": {"duration": "0.0", "full_score": 0.0, "grades": [0, 0, 0, 0, 0]}, "IGCSE(AQA)__物理__PAPER 2": {"duration": "0.0", "full_score": 0.0, "grades": [0, 0, 0, 0, 0]}, "IGCSE(CIE)__数学__CoreP1": {"duration": "0.0", "full_score": 0.0, "grades": ["-", "-", "-", 38, 32]}, "IGCSE(CIE)__数学__CoreP2": {"duration": "0.0", "full_score": 0.0, "grades": ["-", 58, 46, 34, 26]}, "IGCSE(CIE)__数学__AdditionalP1": {"duration": "0.0", "full_score": 0.0, "grades": [0, 0, 0, 0, 0]}, "IGCSE(CIE)__数学__AdditionalP2": {"duration": "0.0", "full_score": 0.0, "grades": [0, 0, 0, 0, 0]}, "IGCSE(EDX)__经济__0": {"duration": "0.0", "full_score": 0.0, "grades": [0, 0, 0, 0, 0]}, "IGCSE(CIE)__经济__0": {"duration": "0.0", "full_score": 0.0, "grades": [0, 0, 0, 0, 0]}, "IGCSE(AQA)__经济__0": {"duration": "0.0", "full_score": 0.0, "grades": [0, 0, 0, 0, 0]}, "IGCSE(EDX)__会计__0": {"duration": "0.0", "full_score": 0.0, "grades": [0, 0, 0, 0, 0]}, "IGCSE(EDX)__商务__0": {"duration": "0.0", "full_score": 0.0, "grades": [0, 0, 0, 0, 0]}, "IGCSE(AQA)__商务__0": {"duration": "0.0", "full_score": 0.0, "grades": [0, 0, 0, 0, 0]}};
+
+document.addEventListener("DOMContentLoaded", () => {
+    const systemSelect = document.querySelectorAll('select')[0];
+    const subjectSelect = document.querySelectorAll('select')[1];
+    const paperSelect = document.querySelectorAll('select')[2];
+
+    const durationInput = document.querySelector('input[placeholder="分钟"]');
+    const fullScoreInput = document.querySelectorAll(".exam-block input")[1];
+    const gradeInputs = document.querySelectorAll('.item3 input');
+
+    function clearAndDisable(select) {
+        select.innerHTML = '<option value="">请选择</option>';
+        select.disabled = true;
+    }
+
+    function populateSelect(select, options) {
+        select.innerHTML = '<option value="">请选择</option>';
+        options.forEach(opt => {
+            const option = document.createElement('option');
+            option.value = option.text = opt;
+            select.appendChild(option);
+        });
+        select.disabled = false;
+    }
+
+    populateSelect(systemSelect, Object.keys(systemToSubjects));
+
+    systemSelect.addEventListener("change", () => {
+        const system = systemSelect.value;
+        clearAndDisable(subjectSelect);
+        clearAndDisable(paperSelect);
+        durationInput.value = "";
+        fullScoreInput.value = "";
+        gradeInputs.forEach(i => i.value = "");
+        if (system && systemToSubjects[system]) {
+            populateSelect(subjectSelect, systemToSubjects[system]);
+        }
+    });
+
+    subjectSelect.addEventListener("change", () => {
+        const system = systemSelect.value;
+        const subject = subjectSelect.value;
+        clearAndDisable(paperSelect);
+        durationInput.value = "";
+        fullScoreInput.value = "";
+        gradeInputs.forEach(i => i.value = "");
+        const key = system + '__' + subject;
+        if (key && systemSubjectToPapers[key]) {
+            populateSelect(paperSelect, systemSubjectToPapers[key]);
+        }
+    });
+
+    paperSelect.addEventListener("change", () => {
+        const system = systemSelect.value;
+        const subject = subjectSelect.value;
+        const paper = paperSelect.value;
+        const key = system + '__' + subject + '__' + paper;
+        if (paperInfoMap[key]) {
+            const info = paperInfoMap[key];
+            durationInput.value = info.duration || "";
+            fullScoreInput.value = info.full_score || "";
+
+            let grades = info.grades || [];
+            let labels = system === "AP" 
+                ? ["[5]", "[4]", "[3]", "[2]", "[1]"] 
+                : ["[A*]", "[A]", "[B]", "[C]", "[D]"];
+            grades.forEach((g, i) => {
+                if (gradeInputs[i]) {
+                    let score = (g === null || g === undefined || g === "-" || g === "") ? "-" : g;
+                    gradeInputs[i].value = labels[i] + " " + score;
+                }
+            });
+        }
+    });
+});
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+function exportToPDF() {
+    const nameInput = document.querySelectorAll('.base-block input')[0];
+    const studentName = nameInput.value || "未命名";
+    const element = document.body;
+    const opt = {
+        margin: 0,
+        filename: `${studentName}-首次课学情诊断单.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 4 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    html2pdf().set(opt).from(element).save();
+}
+</script>
+</body>
+</html>
